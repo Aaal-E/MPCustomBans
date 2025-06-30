@@ -1,0 +1,16 @@
+{
+"id": "mpbans",
+"name": "MP Custom Bans",
+"author": ["Aaal"],
+"description": "bans some jokers in multiplayer.",
+"prefix": "mpb",
+"main_file": "MPcustombans.lua",
+"display_name": "MP Custom Bans",
+"version": "1.0",
+"priority": 90071992547409909,
+"dependencies": [
+    "Steamodded (>=1.*)",
+    "Lovely (>=0.6)", 
+    "Multiplayer"
+]
+}
