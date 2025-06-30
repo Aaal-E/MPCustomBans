@@ -61,7 +61,7 @@ local function is_banned(card)
 	if card.config.center.set == "Joker" then 
 		return MP.DECK.BANNED_JOKERS[card.config.center.key]
 	end
-	if card.config.center.set == "Consumable" then 
+	if card.config.center.set == "Tarot" or card.config.center.set == "Planet" or card.config.center.set == "Spectral" then 
 		return MP.DECK.BANNED_CONSUMABLES[card.config.center.key]
 	end
 	if card.config.center.set == "Voucher" then 
@@ -71,9 +71,16 @@ local function is_banned(card)
 end
 
 function Card:ban_card()
-	local cardid = self.config.center_key
-    MP.DECK.ban_card(cardid)
-    --print("banned " .. cardid)
+	local card = self
+	if card.config.center.set == "Joker" then 
+		MP.DECK.BANNED_JOKERS[card.config.center.key] = true
+	end
+	if card.config.center.set == "Tarot" or card.config.center.set == "Planet" or card.config.center.set == "Spectral" then 
+		MP.DECK.BANNED_CONSUMABLES[card.config.center.key] = true
+	end
+	if card.config.center.set == "Voucher" then 
+		MP.DECK.BANNED_VOUCHERS[card.config.center.key] = true
+	end
 end
 
 function Card:unban_card()
@@ -81,7 +88,7 @@ function Card:unban_card()
 	if card.config.center.set == "Joker" then 
 		MP.DECK.BANNED_JOKERS[card.config.center.key] = nil
 	end
-	if card.config.center.set == "Consumable" then 
+	if card.config.center.set == "Tarot" or card.config.center.set == "Planet" or card.config.center.set == "Spectral" then 
 		MP.DECK.BANNED_CONSUMABLES[card.config.center.key] = nil
 	end
 	if card.config.center.set == "Voucher" then 
@@ -110,7 +117,7 @@ SMODS.Keybind{
 	action = function(self)
 	    if G.CONTROLLER.hovering.target.cost then
 		    local card = G.CONTROLLER.hovering.target
-		    if card.area.config.type and card.area.config.type == 'title' and card.area.config.collection == true then
+		    if card.area.config.type and (card.area.config.type == 'title' or card.area.config.type == 'voucher') and card.area.config.collection == true then
 			    if is_banned(card) then
 					card.debuff = false
 					card:unban_card()
@@ -145,7 +152,7 @@ function debuff_collection_page()
 	if G.your_collection then
 		for i = 1, #G.your_collection do
 			for _, v in pairs(G.your_collection[i].cards) do
-				if MP.DECK.BANNED_JOKERS[v.config.center_key] then
+				if MP.DECK.BANNED_JOKERS[v.config.center_key] or MP.DECK.BANNED_CONSUMABLES[v.config.center_key] or MP.DECK.BANNED_VOUCHERS[v.config.center_key]then
 					v.debuff = true
 				end
 			end
@@ -153,29 +160,30 @@ function debuff_collection_page()
 	end
 end
 
-local use_and_sell_buttonsref = G.UIDEF.use_and_sell_buttons
-function G.UIDEF.use_and_sell_buttons(card)
-	local retval = use_and_sell_buttonsref(card)
-
-	if card.area and card.area.config.type == 'title' and card.ability.set == 'Joker' then
-		local ban =
-		{n=G.UIT.C, config={align = "cr"}, nodes={
-
-		  {n=G.UIT.C, config={ref_table = card, align = "cr",maxw = 1.25, padding = 0.1, r=0.08, minw = 1.25, hover = true, shadow = true, colour = G.C.RED, one_press = true, button = 'sell_card', func = 'can_ban_card'}, nodes={
-			{n=G.UIT.B, config = {w=0.1,h=0.6}},
-			{n=G.UIT.C, config={align = "tm"}, nodes={
-				{n=G.UIT.R, config={align = "cm", maxw = 1.25}, nodes={
-					{n=G.UIT.T, config={text = localize('b_ban'),colour = G.C.UI.TEXT_LIGHT, scale = 0.4, shadow = true}}
-				}}
-			}}
-		  }}
-		}}
-		retval.nodes[1].nodes[2].nodes = retval.nodes[1].nodes[2].nodes or {}
-		table.insert(retval.nodes[1].nodes[2].nodes, ban)
-		return retval
-	end
-
-	return retval
-end
+--code for a context button to ban cards, discarded since I couldn't figure out how to make it show up in the collection
+--local use_and_sell_buttonsref = G.UIDEF.use_and_sell_buttons
+--function G.UIDEF.use_and_sell_buttons(card)
+--	local retval = use_and_sell_buttonsref(card)
+--
+--	if card.area and card.area.config.type == 'title' and card.ability.set == 'Joker' then
+--		local ban =
+--		{n=G.UIT.C, config={align = "cr"}, nodes={
+--
+--		  {n=G.UIT.C, config={ref_table = card, align = "cr",maxw = 1.25, padding = 0.1, r=0.08, minw = 1.25, hover = true, shadow = true, colour = G.C.RED, one_press = true, button = 'sell_card', func = 'can_ban_card'}, nodes={
+--			{n=G.UIT.B, config = {w=0.1,h=0.6}},
+--			{n=G.UIT.C, config={align = "tm"}, nodes={
+--				{n=G.UIT.R, config={align = "cm", maxw = 1.25}, nodes={
+--					{n=G.UIT.T, config={text = localize('b_ban'),colour = G.C.UI.TEXT_LIGHT, scale = 0.4, shadow = true}}
+--				}}
+--			}}
+--		  }}
+--		}}
+--		retval.nodes[1].nodes[2].nodes = retval.nodes[1].nodes[2].nodes or {}
+--		table.insert(retval.nodes[1].nodes[2].nodes, ban)
+--		return retval
+--	end
+--
+--	return retval
+--end
 
 end
