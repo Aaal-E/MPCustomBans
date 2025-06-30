@@ -57,17 +57,46 @@ function G.FUNCS.unlock_banned_cards()
 end
 
 
---allow for a seperate banlist to be edited
+local function is_banned(card) 
+	if card.config.center.set == "Joker" then 
+		return MP.DECK.BANNED_JOKERS[card.config.center.key]
+	end
+	if card.config.center.set == "Consumable" then 
+		return MP.DECK.BANNED_CONSUMABLES[card.config.center.key]
+	end
+	if card.config.center.set == "Voucher" then 
+		return MP.DECK.BANNED_VOUCHERS[card.config.center.key]
+	end
+	return false
+end
+
 function Card:ban_card()
 	local cardid = self.config.center_key
     MP.DECK.ban_card(cardid)
-    print("banned " .. cardid)
-	table.insert(banned_jokers, cardid)
+    --print("banned " .. cardid)
+end
+
+function Card:unban_card()
+	local card = self
+	if card.config.center.set == "Joker" then 
+		MP.DECK.BANNED_JOKERS[card.config.center.key] = nil
+	end
+	if card.config.center.set == "Consumable" then 
+		MP.DECK.BANNED_CONSUMABLES[card.config.center.key] = nil
+	end
+	if card.config.center.set == "Voucher" then 
+		MP.DECK.BANNED_VOUCHERS[card.config.center.key] = nil
+	end
 end
 
 G.FUNCS.ban_card = function(e)
     local card = e.config.ref_table
     card:ban_card()
+end
+
+G.FUNCS.unban_card = function(e)
+	local card = e.config.ref_table
+	card:unban_card()
 end
 
 --button func
@@ -82,14 +111,47 @@ SMODS.Keybind{
 	    if G.CONTROLLER.hovering.target.cost then
 		    local card = G.CONTROLLER.hovering.target
 		    if card.area.config.type and card.area.config.type == 'title' and card.area.config.collection == true then
-			    card.debuff = true
-			    card:ban_card()
+			    if is_banned(card) then
+					card.debuff = false
+					card:unban_card()
+				else
+					card.debuff = true
+					card:ban_card()
+				end
 			end
 		end
 	end
 }
 
+--collection injection for UI
+local ccref = SMODS.card_collection_UIBox
+function SMODS.card_collection_UIBox(_pool, rows, args)
+    local ret = ccref(_pool, rows, args)
+	debuff_collection_page()
+	return ret
+end
 
+local ccpref = G.FUNCS.option_cycle
+function G.FUNCS.option_cycle(e)	
+    local ret = ccpref(e)
+	if e.config.ref_table.opt_callback == "SMODS_card_collection_page" then
+		debuff_collection_page()
+	end
+	return ret
+end
+
+
+function debuff_collection_page() 
+	if G.your_collection then
+		for i = 1, #G.your_collection do
+			for _, v in pairs(G.your_collection[i].cards) do
+				if MP.DECK.BANNED_JOKERS[v.config.center_key] then
+					v.debuff = true
+				end
+			end
+		end
+	end
+end
 
 local use_and_sell_buttonsref = G.UIDEF.use_and_sell_buttons
 function G.UIDEF.use_and_sell_buttons(card)
