@@ -9,7 +9,7 @@
 "version": "1.0",
 "priority": 90071992547409909,
 "dependencies": [
-    "Steamodded (>=1.*)",
+    "Steamodded (>=1.0.0~)",
     "Lovely (>=0.6)", 
     "Multiplayer"
 ]
